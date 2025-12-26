@@ -1,0 +1,179 @@
+/*******************************************************************************
+ * FILE 1: SCHEMA CREATION (DDL)
+ * Description: Creates Database and Tables based on Mermaid Diagram
+ * Execution Order: RUN THIS FILE FIRST
+ *******************************************************************************/
+
+USE master;
+GO
+
+-- Xóa database cũ nếu tồn tại để tạo mới sạch sẽ
+IF EXISTS (SELECT name FROM sys.databases WHERE name = 'DB_TranhChapDongThoi')
+BEGIN
+    ALTER DATABASE DB_TranhChapDongThoi SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE DB_TranhChapDongThoi;
+END
+GO
+
+CREATE DATABASE DB_TranhChapDongThoi;
+GO
+
+USE DB_TranhChapDongThoi;
+GO
+
+-- 1. Bảng DANHMUC
+CREATE TABLE DANHMUC (
+    MaDanhMuc VARCHAR(20) PRIMARY KEY,
+    TenDanhMuc NVARCHAR(100),
+    MoTa NVARCHAR(255)
+);
+
+-- 2. Bảng NHASANXUAT
+CREATE TABLE NHASANXUAT (
+    MaNSX VARCHAR(20) PRIMARY KEY,
+    TenNSX NVARCHAR(100),
+    DiaChi NVARCHAR(255),
+    SoDienThoai VARCHAR(20)
+);
+
+-- 3. Bảng NHANVIEN
+CREATE TABLE NHANVIEN (
+    MaNhanVien VARCHAR(20) PRIMARY KEY,
+    HoTen NVARCHAR(100),
+    ChucVu NVARCHAR(50)
+);
+
+-- 4. Bảng KHACHHANG
+CREATE TABLE KHACHHANG (
+    MaKhachHang VARCHAR(20) PRIMARY KEY,
+    HoTen NVARCHAR(100),
+    SoDienThoai VARCHAR(20) UNIQUE,
+    NgaySinh DATE,
+    DiaChi NVARCHAR(255)
+);
+
+-- 5. Bảng THETHANHVIEN
+CREATE TABLE THETHANHVIEN (
+    MaThe VARCHAR(20) PRIMARY KEY,
+    HangThe NVARCHAR(50),
+    TongTienTichLuy DECIMAL(18, 2),
+    NgayBatDauHieuLuc DATE,
+    MaKhachHang VARCHAR(20) NOT NULL,
+    CONSTRAINT FK_TheTV_KhachHang FOREIGN KEY (MaKhachHang) REFERENCES KHACHHANG(MaKhachHang)
+);
+
+-- 6. Bảng PHIEUGIAMGIA
+CREATE TABLE PHIEUGIAMGIA (
+    MaPhieu VARCHAR(20) PRIMARY KEY,
+    TiLeGiamGia FLOAT,
+    NgayPhatHanh DATE,
+    NgayHetHan DATE,
+    TrangThai NVARCHAR(50),
+    MaKhachHang VARCHAR(20),
+    CONSTRAINT FK_PGG_KhachHang FOREIGN KEY (MaKhachHang) REFERENCES KHACHHANG(MaKhachHang)
+);
+
+-- 7. Bảng SANPHAM
+CREATE TABLE SANPHAM (
+    MaSanPham VARCHAR(20) PRIMARY KEY,
+    TenSanPham NVARCHAR(100),
+    MoTa NVARCHAR(255),
+    GiaNiemYet DECIMAL(18, 2),
+    TonKho INT,
+    TonKhoToiDa INT,
+    MaNSX VARCHAR(20),
+    MaDanhMuc VARCHAR(20),
+    CONSTRAINT FK_SP_NSX FOREIGN KEY (MaNSX) REFERENCES NHASANXUAT(MaNSX),
+    CONSTRAINT FK_SP_DM FOREIGN KEY (MaDanhMuc) REFERENCES DANHMUC(MaDanhMuc)
+);
+
+-- 8. Bảng DONHANG
+CREATE TABLE DONHANG (
+    MaDonHang VARCHAR(20) PRIMARY KEY,
+    NgayLap DATETIME,
+    LoaiDonHang NVARCHAR(50),
+    ThanhTien DECIMAL(18, 2),
+    MaKhachHang VARCHAR(20),
+    MaNhanVien VARCHAR(20),
+    MaPhieuGiamGia VARCHAR(20),
+    CONSTRAINT FK_DH_KhachHang FOREIGN KEY (MaKhachHang) REFERENCES KHACHHANG(MaKhachHang),
+    CONSTRAINT FK_DH_NhanVien FOREIGN KEY (MaNhanVien) REFERENCES NHANVIEN(MaNhanVien),
+    CONSTRAINT FK_DH_PGG FOREIGN KEY (MaPhieuGiamGia) REFERENCES PHIEUGIAMGIA(MaPhieu)
+);
+
+-- 9. Bảng KHUYENMAI
+CREATE TABLE KHUYENMAI (
+    MaKhuyenMai VARCHAR(20) PRIMARY KEY,
+    TenKhuyenMai NVARCHAR(100),
+    LoaiKhuyenMai NVARCHAR(50),
+    TiLeKhuyenMai FLOAT,
+    NgayBatDau DATETIME,
+    NgayKetThuc DATETIME,
+    SoLuongToiDa INT,
+    CapDoTheApDung NVARCHAR(50)
+);
+
+-- 10. Bảng CHITIET_DONHANG
+CREATE TABLE CHITIET_DONHANG (
+    MaDonHang VARCHAR(20),
+    MaSanPham VARCHAR(20),
+    SoLuong INT,
+    DonGia DECIMAL(18, 2),
+    MaKhuyenMai VARCHAR(20),
+    PRIMARY KEY (MaDonHang, MaSanPham),
+    CONSTRAINT FK_CTDH_DonHang FOREIGN KEY (MaDonHang) REFERENCES DONHANG(MaDonHang),
+    CONSTRAINT FK_CTDH_SanPham FOREIGN KEY (MaSanPham) REFERENCES SANPHAM(MaSanPham),
+    CONSTRAINT FK_CTDH_KhuyenMai FOREIGN KEY (MaKhuyenMai) REFERENCES KHUYENMAI(MaKhuyenMai)
+);
+
+-- 11. Bảng SANPHAM_KHUYENMAI
+CREATE TABLE SANPHAM_KHUYENMAI (
+    MaSanPham VARCHAR(20),
+    MaKhuyenMai VARCHAR(20),
+    PRIMARY KEY (MaSanPham, MaKhuyenMai),
+    CONSTRAINT FK_SPKM_SanPham FOREIGN KEY (MaSanPham) REFERENCES SANPHAM(MaSanPham),
+    CONSTRAINT FK_SPKM_KhuyenMai FOREIGN KEY (MaKhuyenMai) REFERENCES KHUYENMAI(MaKhuyenMai)
+);
+
+-- 12. Bảng DONDATHANG_NSX
+CREATE TABLE DONDATHANG_NSX (
+    MaDonDatHang VARCHAR(20) PRIMARY KEY,
+    NgayDat DATE,
+    TrangThai NVARCHAR(50),
+    MaNhanVien VARCHAR(20),
+    MaNSX VARCHAR(20),
+    CONSTRAINT FK_DDHNSX_NV FOREIGN KEY (MaNhanVien) REFERENCES NHANVIEN(MaNhanVien),
+    CONSTRAINT FK_DDHNSX_NSX FOREIGN KEY (MaNSX) REFERENCES NHASANXUAT(MaNSX)
+);
+
+-- 13. Bảng CHITIET_DONDATHANG_NSX
+CREATE TABLE CHITIET_DONDATHANG_NSX (
+    MaDonDatHang VARCHAR(20),
+    MaSanPham VARCHAR(20),
+    SoLuongDat INT,
+    PRIMARY KEY (MaDonDatHang, MaSanPham),
+    CONSTRAINT FK_CTDDH_DDH FOREIGN KEY (MaDonDatHang) REFERENCES DONDATHANG_NSX(MaDonDatHang),
+    CONSTRAINT FK_CTDDH_SP FOREIGN KEY (MaSanPham) REFERENCES SANPHAM(MaSanPham)
+);
+
+-- 14. Bảng PHIEUNHAPKHO
+CREATE TABLE PHIEUNHAPKHO (
+    MaPhieuNhap VARCHAR(20) PRIMARY KEY,
+    NgayNhap DATETIME,
+    MaNhanVien VARCHAR(20),
+    CONSTRAINT FK_PNK_NV FOREIGN KEY (MaNhanVien) REFERENCES NHANVIEN(MaNhanVien)
+);
+
+-- 15. Bảng CHITIET_PHIEUNHAPKHO
+CREATE TABLE CHITIET_PHIEUNHAPKHO (
+    MaPhieuNhap VARCHAR(20),
+    MaSanPham VARCHAR(20),
+    SoLuongNhap INT,
+    DonGiaNhap DECIMAL(18, 2),
+    MaDonDatHang VARCHAR(20),
+    PRIMARY KEY (MaPhieuNhap, MaSanPham),
+    CONSTRAINT FK_CTPN_PN FOREIGN KEY (MaPhieuNhap) REFERENCES PHIEUNHAPKHO(MaPhieuNhap),
+    CONSTRAINT FK_CTPN_SP FOREIGN KEY (MaSanPham) REFERENCES SANPHAM(MaSanPham),
+    CONSTRAINT FK_CTPN_DDH FOREIGN KEY (MaDonDatHang) REFERENCES DONDATHANG_NSX(MaDonDatHang)
+);
+GO
