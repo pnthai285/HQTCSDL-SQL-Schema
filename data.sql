@@ -266,6 +266,9 @@ INSERT INTO
 VALUES ('SP001', 'KM001');
 
 -- =============================================================================
+INSERT INTO DANHMUC(MaDanhMuc, TenDanhMuc) VALUES ('DM01', N'Test');
+INSERT INTO NHASANXUAT(MaNSX, TenNSX) VALUES ('NSX01', N'Test Factory');
+-- =============================================================================
 -- KỊCH BẢN 7: LOST UPDATE (Tồn kho)
 -- -----------------------------------------------------------------------------
 -- Cặp Procedure:
