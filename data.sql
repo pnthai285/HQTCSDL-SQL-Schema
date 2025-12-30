@@ -266,8 +266,37 @@ INSERT INTO
 VALUES ('SP001', 'KM001');
 
 -- =============================================================================
-INSERT INTO DANHMUC(MaDanhMuc, TenDanhMuc) VALUES ('DM01', N'Test');
-INSERT INTO NHASANXUAT(MaNSX, TenNSX) VALUES ('NSX01', N'Test Factory');
+IF NOT EXISTS (SELECT 1 FROM DANHMUC WHERE MaDanhMuc = 'DM01')
+    INSERT INTO DANHMUC(MaDanhMuc, TenDanhMuc, MoTa) 
+    VALUES ('DM01', N'Điện tử', N'Các thiết bị điện tử');
+
+IF NOT EXISTS (SELECT 1 FROM NHASANXUAT WHERE MaNSX = 'NSX01')
+    INSERT INTO NHASANXUAT(MaNSX, TenNSX, DiaChi, SoDienThoai) 
+    VALUES ('NSX01', N'Samsung Factory', N'Khu CNC Q9', '0909000111');
+
+-- 2. Thêm SP002 (Nếu chưa có)
+IF NOT EXISTS (SELECT 1 FROM SANPHAM WHERE MaSanPham = 'SP002')
+BEGIN
+    INSERT INTO SANPHAM (MaSanPham, TenSanPham, MoTa, GiaNiemYet, TonKho, TonKhoToiDa, MaNSX, MaDanhMuc)
+    VALUES (
+        'SP002',                -- Mã SP
+        N'Laptop Gaming Demo',  -- Tên SP
+        N'Sản phẩm test số 2',  -- Mô tả
+        25000000,               -- Giá
+        50,                     -- Tồn kho
+        100,                    -- Tồn kho tối đa
+        'NSX01',                -- Mã NSX
+        'DM01'                  -- Mã Danh mục
+    );
+    PRINT '>>> Da them thanh cong SP002.';
+END
+ELSE
+BEGIN
+    -- Nếu có rồi thì reset tồn kho về 50 để dễ test
+    UPDATE SANPHAM SET TonKho = 50 WHERE MaSanPham = 'SP002';
+    PRINT '>>> SP002 da ton tai. Da reset TonKho = 50.';
+END
+GO
 -- =============================================================================
 -- KỊCH BẢN 7: LOST UPDATE (Tồn kho)
 -- -----------------------------------------------------------------------------

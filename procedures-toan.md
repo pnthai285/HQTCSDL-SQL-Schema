@@ -48,20 +48,20 @@
 
 ### Các bước thực hiện:
 
-1.  **Chuẩn bị:** Đảm bảo `SP001` đang tồn tại.
+1.  **Chuẩn bị:** Đảm bảo `SP002` đang tồn tại.
 
 2.  **Cửa sổ 1 (T1 - Đang xóa):**
     ```sql
     USE DB_TranhChapDongThoi;
     -- T1 khóa độc quyền (XLOCK), giả lập kiểm tra lâu (10s)
-    EXEC sp_Delete_SanPham @MaSP = 'SP001', @Role = 'T1';
+    EXEC sp_Delete_SanPham @MaSP = 'SP002', @Role = 'T1';
     ```
 
 3.  **Cửa sổ 2 (T2 - Cố gắng cập nhật):** *Chạy NGAY sau T1*
     ```sql
     USE DB_TranhChapDongThoi;
     -- T2 cố đọc SP001 để cập nhật
-    EXEC sp_Update_SanPham @MaSP = 'SP001', @SoLuongMua = 5, @Role = 'T2';
+    EXEC sp_Update_SanPham @MaSP = 'SP002', @SoLuongMua = 5, @Role = 'T2';
     ```
 
 4.  **Kết quả mong đợi:**
