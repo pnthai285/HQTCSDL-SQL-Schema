@@ -192,7 +192,22 @@ VALUES ('DH_DL_01', GETDATE(), N'MuaTrucTiep', 5000000, 'KH_A', 'NV001', NULL);
 -- ===================================================================
 -- ===================================================================
 -- APPEND Ở ĐÂY
+INSERT INTO NHASANXUAT (MaNSX, TenNSX, DiaChi, SoDienThoai) 
+VALUES ('NSX002', N'LG', N'Hàn Quốc', '0909000222');
 
+INSERT INTO NHANVIEN (MaNhanVien, HoTen, ChucVu) 
+VALUES ('NV002', N'Trần Thị Nhân Viên', N'Nhân viên');
+
+INSERT INTO SANPHAM (MaSanPham, TenSanPham, MoTa, GiaNiemYet, TonKho, TonKhoToiDa, MaNSX, MaDanhMuc)
+VALUES ('SP_LAPTOP', N'Laptop Dell', N'Laptop văn phòng', 20000000, 100, 200, 'NSX001', 'DM001'),
+       ('SP_MOUSE', N'Chuột Logitech', N'Chuột gaming', 2000000, 60, 100, 'NSX002', 'DM001'),
+       ('SP_KEYBOARD', N'Bàn phím cơ', N'Bàn phím gaming', 5000000, 50, 100, 'NSX001', 'DM001');
+
+INSERT INTO DONDATHANG_NSX(MaDonDatHang, NgayDat, TrangThai, MaNhanVien, MaNSX)
+VALUES ('DH01', GETDATE(), N'Chờ xử lý', 'NV001', 'NSX001');
+
+INSERT INTO CHITIET_DONDATHANG_NSX(MaDonDatHang, MaSanPham, SoLuongDat)
+VALUES ('DH01', 'SP_LAPTOP', 100);
 
 PRINT '=== HOÀN TẤT TẠO DỮ LIỆU MẪU CHO CÁC KỊCH BẢN TRANH CHẤP ==='
 GO
