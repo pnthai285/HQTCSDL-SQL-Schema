@@ -181,8 +181,8 @@ BEGIN
         -- [BƯỚC 3]: THỰC HIỆN INSERT
         -- Chỉ chèn các cột cơ bản để demo
         INSERT INTO SANPHAM (MaSanPham, TenSanPham, GiaNiemYet, TonKho, MaNSX, MaDanhMuc)
-        VALUES (@MaSP, @TenSP, 100000, 100, 'NSX01', 'DM01'); 
-        -- (Lưu ý: Bạn cần đảm bảo NSX01 và DM01 có trong DB hoặc sửa lại cho khớp data của bạn)
+        VALUES (@MaSP, @TenSP, 100000, 100, 'NSX001', 'DM001'); 
+        -- (Lưu ý: Bạn cần đảm bảo NSX001 và DM001 có trong DB hoặc sửa lại cho khớp data của bạn)
 
         IF @Role = 'T1' PRINT '>>> T1: Insert thanh cong. Commit.';
         ELSE PRINT '>>> T2: Insert thanh cong. Commit.';
