@@ -385,11 +385,82 @@ VALUES (
         NULL
     );
 
+
+
+
+
+
+-- ===================================================================
+-- ===================================================================
+-- ==========================THANG=====================================
+-- KỊCH BẢN CHO 3 PROCEDURES THEO DESCRIPTION.MD (procedures-thang.sql)
+-- Các kịch bản tranh chấp: LOST UPDATE, PHANTOM READ, DEADLOCK
+-- ===================================================================
+-- Dữ liệu nền : 
+-- 1. Đảm bảo tồn tại KH010 và NV010
+IF NOT EXISTS (SELECT 1 FROM KHACHHANG WHERE MaKhachHang = 'KH010')
+BEGIN
+    INSERT INTO KHACHHANG (MaKhachHang, HoTen, SoDienThoai, NgaySinh, DiaChi)
+    VALUES ('KH010', N'Nguyen Van A', '0909123456', '1990-01-01', N'Hanoi');
+END
+
+IF NOT EXISTS (SELECT 1 FROM NHANVIEN WHERE MaNhanVien = 'NV010')
+BEGIN
+    INSERT INTO NHANVIEN (MaNhanVien, HoTen, ChucVu)
+    VALUES ('NV010', N'Tran Thi V', N'Nhan Vien');
+END
+
+
+-- KỊCH BẢN 1: LOST UPDATE
+-- 1. Đảm bảo sản phẩm SP010 có TonKho ban đầu là 100
+
+IF NOT EXISTS (SELECT 1 FROM SANPHAM WHERE MaSanPham = 'SP010')
+    INSERT INTO SANPHAM (MaSanPham, TenSanPham, GiaNiemYet, TonKho)
+    VALUES ('SP010', N'Sản phẩm Test', 100000, 100);
+ELSE
+    UPDATE SANPHAM SET TonKho = 100 WHERE MaSanPham = 'SP010';
+
+-- 2. Tạo sẵn 2 đơn hàng DH010 và DH011 để thực hiện chèn chi tiết 
+IF NOT EXISTS (SELECT 1 FROM DONHANG WHERE MaDonHang = 'DH010')
+    INSERT INTO DONHANG (MaDonHang, NgayLap, ThanhTien, MaKhachHang, MaNhanVien)
+    VALUES ('DH010', GETDATE(), 0, 'KH010', 'NV010');
+
+IF NOT EXISTS (SELECT 1 FROM DONHANG WHERE MaDonHang = 'DH011')
+    INSERT INTO DONHANG (MaDonHang, NgayLap, ThanhTien, MaKhachHang, MaNhanVien)
+    VALUES ('DH011', GETDATE(), 0, 'KH010', 'NV010');
+
+
+
+-- KỊCH BẢN 2: PHANTOM READ
+-- Đảm bảo đơn hàng có mã DH100 chưa tồn tại.
+
+DELETE FROM DONHANG WHERE MaDonHang = 'DH100';
+
+
+
+
+-- KỊCH BẢN 3: DEADLOCK
+-- 1. Tạo đơn hàng DH_DEAD với tổng tiền 1,000,000
+IF NOT EXISTS (SELECT 1 FROM DONHANG WHERE MaDonHang = 'DH_DEAD')
+    INSERT INTO DONHANG (MaDonHang, NgayLap, ThanhTien, MaKhachHang, MaNhanVien)
+    VALUES ('DH_DEAD', GETDATE(), 1000000, 'KH010', 'NV010');
+ELSE
+    UPDATE DONHANG SET ThanhTien = 1000000, MaPhieuGiamGia = NULL WHERE MaDonHang = 'DH_DEAD';
+
+-- 2. Tạo phiếu giảm giá 10% (TiLe = 0.1) chưa sử dụng cho KH010
+DELETE FROM PHIEUGIAMGIA WHERE MaPhieu = 'PGG_TEST';
+INSERT INTO PHIEUGIAMGIA (MaPhieu, TiLeGiamGia, NgayPhatHanh, NgayHetHan, TrangThai, MaKhachHang)
+VALUES ('PGG_TEST', 0.1, GETDATE(), '2026-01-01', N'ChuaSuDung', 'KH010');
+
+
+
+
+
 -- ===================================================================
 -- ===================================================================
 -- ==========================TUAN=====================================
--- KỊCH BẢN CHO 3 PROCEDURES THEO DESCRIPTION.MD (procedures-tuan.sql)
--- Các kịch bản tranh chấp: Lost Update, Phantom Read, Deadlock
+-- KỊCH BẢN CHO 3 PROCEDURES THEO DESCRIPTION.MD (procedures-thang.sql)
+-- Các kịch bản tranh chấp: LOST UPDATE, PHANTOM READ, DEADLOCK
 -- ===================================================================
 
 -- =============================================================================
