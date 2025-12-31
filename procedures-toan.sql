@@ -81,6 +81,9 @@ GO
  * GIẢI QUYẾT: Dirty Read
  * - Sử dụng XLOCK để đảm bảo không ai đọc được dữ liệu rác trước khi Commit.
  *******************************************************************************/
+USE DB_TranhChapDongThoi;
+GO
+
 CREATE OR ALTER PROCEDURE sp_Delete_SanPham
     @MaSP VARCHAR(20),
     @Role VARCHAR(2) = 'T1'
@@ -94,10 +97,9 @@ BEGIN
 
         PRINT '>>> T1 (DELETE): Bat dau giao tac xoa san pham.';
 
-        -- [BƯỚC 1]: Kiểm tra và Khóa chặt (XLOCK)
+        -- [BƯỚC 1]: Kiểm tra và Khóa chặt (XLOCK) bảng cha (SANPHAM)
         -- KỸ THUẬT FIX: WITH (XLOCK, ROWLOCK)
-        -- Tác dụng: Khóa độc quyền ngay lập tức. T2 (Update) dù chỉ đọc hay sửa đều phải chờ.
-        -- Điều này ngăn T2 đọc dữ liệu mà T1 "đang định xóa nhưng chưa xóa hẳn".
+        -- Ngay lập tức khóa dòng SP lại. Không ai được đọc/sửa dòng này.
         IF NOT EXISTS (SELECT 1 FROM SANPHAM WITH (XLOCK, ROWLOCK) WHERE MaSanPham = @MaSP)
         BEGIN
             PRINT '>>> T1: San pham khong ton tai.';
@@ -105,14 +107,26 @@ BEGIN
             RETURN;
         END
 
-        -- [BƯỚC 2]: Giả lập giữ khóa (Wait 10s)
-        PRINT '>>> T1: Da giu XLOCK. Dang kiem tra rang buoc (Wait 10s)...';
+        -- [BƯỚC 2]: Xóa các dữ liệu ràng buộc khóa ngoại (Child Tables)
+        -- Phải thực hiện bước này sau khi đã Lock bảng cha, và trước khi Delete bảng cha.
+        IF EXISTS (SELECT 1 FROM SANPHAM_KHUYENMAI WHERE MaSanPham = @MaSP)
+        BEGIN
+            DELETE FROM SANPHAM_KHUYENMAI WHERE MaSanPham = @MaSP;
+            PRINT '>>> T1: Da xoa thong tin lien quan trong SANPHAM_KHUYENMAI.';
+        END
+        
+        -- (Tuỳ chọn: Nếu có ràng buộc ở CHITIET_DONHANG thì cũng phải xử lý ở đây, 
+        -- nhưng theo yêu cầu của bạn chỉ tập trung vào SANPHAM_KHUYENMAI).
+
+        -- [BƯỚC 3]: Giả lập giữ khóa (Wait 10s)
+        -- Lúc này T1 đang giữ khóa trên SANPHAM (do bước 1) và các dòng đã xóa ở bước 2.
+        PRINT '>>> T1: Da giu XLOCK. Dang xu ly logic phuc tap (Wait 10s)...';
         WAITFOR DELAY '00:00:10';
 
-        -- [BƯỚC 3]: Xóa thật
+        -- [BƯỚC 4]: Xóa sản phẩm thật (Parent Table)
         DELETE FROM SANPHAM WHERE MaSanPham = @MaSP;
 
-        PRINT '>>> T1: Da xoa xong. Commit transaction.';
+        PRINT '>>> T1: Da xoa xong san pham. Commit transaction.';
         COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
@@ -120,9 +134,6 @@ BEGIN
         PRINT '>>> LOI HE THONG: ' + ERROR_MESSAGE();
     END CATCH
 END;
-GO
-
-USE DB_TranhChapDongThoi;
 GO
 
 /*******************************************************************************
